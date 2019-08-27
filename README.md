@@ -38,7 +38,7 @@ docker run nosinovacao/floki \
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://github.com/nosinovacao/logtail/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/nosinovacao/floki/issues) for a list of proposed features (and known issues).
 
 
 
