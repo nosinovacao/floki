@@ -1,16 +1,15 @@
-# Logtail
+# Floki
 
-Logtail is a simple micro-service that aggregates Kafka logs, sorts them and pushes them to [Grafana Loki](https://github.com/grafana/loki).
+> `tail -f -> loki = floki`
+
+Floki is a simple micro-service that aggregates [Kafka](https://kafka.apache.org/) logs, sorts them and pushes them to [Grafana Loki](https://github.com/grafana/loki). 
 
 <!-- TABLE OF CONTENTS -->
 ## Table of Contents
 
 * [About the Project](#about-the-project)
-  * [Built With](#built-with)
 * [Getting Started](#getting-started)
-  * [Prerequisites](#prerequisites)
-  * [Installation](#installation)
-* [Usage](#usage)
+  * [Usage](#usage)
 * [Roadmap](#roadmap)
 * [Contributing](#contributing)
 * [License](#license)
@@ -19,50 +18,19 @@ Logtail is a simple micro-service that aggregates Kafka logs, sorts them and pus
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-TODO.
+![Floki Diagram](images/floki.png)
 
-### Built With
-TODO.
-
+[Loki](https://github.com/grafana/loki) has [Promtail](https://github.com/grafana/loki/tree/master/pkg/promtail) which is an agent that installs itself in every k8s cluster nodes and collects the pods logs and sends them to Loki. Since we use the [ELK Stack](https://www.elastic.co/pt/products/) in our infrastructure, each k8s node has the [Filebeat](https://www.elastic.co/pt/products/beats/filebeat) agent running for log collection, so by using Promtail, we are 
+effectively duplicating the functionality. To avoid this, we have created Floki, wich subscribes to our Kafka logging topics, orders the logs and sends them to Loki.
 
 <!-- GETTING STARTED -->
 ## Getting Started
+To run Floki, you need to have the [ELK Stack](https://www.elastic.co/pt/what-is/elk-stack) or other distributed logging system compatible with Kafka and also Loki installed in your infrastructure.
 
-TODO.
-
-### Prerequisites
-TODO.
-<!-- This is an example of how to list things you need to use the software and how to install them.
-* npm
+### Usage
 ```sh
-npm install npm@latest -g
+docker run nosinovacao/floki -lokiurl="http://<loki_base_url>/api/prom/push" -brokerList="<kafka_broker_list>" -topicPattern="^logging-*"
 ```
-
-
-
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-```sh
-git clone https:://github.com/your_username_/Project-Name.git
-```
-3. Install NPM packages
-```sh
-npm install
-```
-4. Enter your API in `config.js`
-```JS
-const API_KEY = 'ENTER YOUR API';
-```
--->
-### Installation
-TODO.
-
-
-<!-- USAGE EXAMPLES -->
-## Usage
-
-TODO.
-
 
 <!-- ROADMAP -->
 ## Roadmap
