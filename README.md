@@ -29,7 +29,10 @@ To run Floki, you need to have the [ELK Stack](https://www.elastic.co/pt/what-is
 
 ### Usage
 ```sh
-docker run nosinovacao/floki -lokiurl="http://<loki_base_url>/api/prom/push" -brokerList="<kafka_broker_list>" -topicPattern="^logging-*"
+docker run nosinovacao/floki \
+   -lokiurl="http://<loki_base_url>/api/prom/push" \
+   -brokerList="<kafka_broker_list>" \
+   -topicPattern="^logging-*"
 ```
 
 <!-- ROADMAP -->
