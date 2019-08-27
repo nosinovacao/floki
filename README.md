@@ -1,4 +1,5 @@
 # Floki
+[![](https://dockerbuildbadges.quelltext.eu/status.svg?organization=niccokunzmann&repository=dockerhub-build-status-image)](https://hub.docker.com/r/nosinovacao/floki/builds/)  
 
 > `tail -f > loki = floki`
 
