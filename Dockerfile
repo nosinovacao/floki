@@ -7,11 +7,11 @@ RUN apk add --update --no-cache git librdkafka-dev pkgconf bash make g++ zlib-de
     make -j8 && \
     make install
 
-WORKDIR $GOPATH/src/logtail/build/
+WORKDIR $GOPATH/src/floki/build/
 COPY . .
 RUN go mod download
-RUN GOOS=linux GOARCH=amd64 go build -a -tags static_all -o /go/bin/logtail
+RUN GOOS=linux GOARCH=amd64 go build -a -tags static_all -o /go/bin/floki
 
 FROM scratch
-COPY --from=builder /go/bin/logtail /go/bin/logtail
-ENTRYPOINT ["/go/bin/logtail"]
+COPY --from=builder /go/bin/floki /go/bin/floki
+ENTRYPOINT ["/go/bin/floki"]
