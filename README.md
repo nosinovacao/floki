@@ -1,6 +1,6 @@
 # Floki
 
-> `tail -f -> loki = floki`
+> `tail -f > loki = floki`
 
 Floki is a simple micro-service that aggregates [Kafka](https://kafka.apache.org/) logs, sorts them and pushes them to [Grafana Loki](https://github.com/grafana/loki). 
 
