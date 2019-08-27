@@ -21,7 +21,7 @@ Floki is a simple micro-service that aggregates [Kafka](https://kafka.apache.org
 ![Floki Diagram](images/floki.png)
 
 [Loki](https://github.com/grafana/loki) has [Promtail](https://github.com/grafana/loki/tree/master/pkg/promtail) which is an agent that installs itself in every k8s cluster nodes and collects the pods logs and sends them to Loki. Since we use the [ELK Stack](https://www.elastic.co/pt/products/) in our infrastructure, each k8s node has the [Filebeat](https://www.elastic.co/pt/products/beats/filebeat) agent running for log collection, so by using Promtail, we are 
-effectively duplicating the functionality. To avoid this, we have created Floki, wich subscribes to our Kafka logging topics, orders the logs and sends them to Loki.
+effectively duplicating the functionality. To avoid this, we have created Floki, which subscribes to our Kafka logging topics, orders the logs and sends them to Loki.
 
 <!-- GETTING STARTED -->
 ## Getting Started
