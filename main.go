@@ -13,8 +13,8 @@ import (
 	"sort"
 	"time"
 
-	l "logtail/logproto"
-	t "logtail/types"
+	l "floki/logproto"
+	t "floki/types"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gogo/protobuf/proto"
