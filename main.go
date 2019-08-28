@@ -155,7 +155,7 @@ func main() {
 	var (
 		lokiAddr       = flag.String("lokiurl", "http://loki:3100", "the loki url, default is http://loki:3100")
 		buffer         = flag.Duration("buffer", 5*time.Second, "how much time to buffer before sending to loki")
-		brokerList     = flag.String("brokerList", "kafka.rancher2.zondev.lab:32400", "the kafka broker list")
+		brokerList     = flag.String("brokerList", "awesome.kafka.broker:32400", "the kafka broker list")
 		clientID       = flag.String("clientid", "floki", "the kafka client id")
 		groupID        = flag.String("groupid", "floki", "the kafka group id")
 		sessionTimeout = flag.String("sessionTimeout", "6000", "kafka session timeout")
