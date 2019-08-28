@@ -1,4 +1,4 @@
-module floki
+module github.com/nosinovacao/floki
 
 require (
 	github.com/go-kit/kit v0.9.0
