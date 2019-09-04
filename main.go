@@ -13,8 +13,8 @@ import (
 	"sort"
 	"time"
 
-	l "floki/logproto"
-	t "floki/types"
+	l "github.com/nosinovacao/floki/logproto"
+	t "github.com/nosinovacao/floki/types"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gogo/protobuf/proto"
@@ -145,7 +145,6 @@ func handleLogMessage(ch chan []byte) {
 }
 
 func kafkaConsumer(cfg *kafka.ConfigMap) (*kafka.Consumer, error) {
-
 	c, err := kafka.NewConsumer(cfg)
 	return c, err
 }
