@@ -13,12 +13,11 @@ import (
 	"sort"
 	"time"
 
-	l "github.com/nosinovacao/floki/logproto"
-	t "github.com/nosinovacao/floki/types"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
+	l "github.com/nosinovacao/floki/logproto"
+	t "github.com/nosinovacao/floki/types"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
@@ -73,7 +72,7 @@ func sendToGrafana(col logCollection) {
 		Streams: streams,
 	}
 
-	buf, err := proto.Marshal(&req)
+	buf, err := req.Marshal() //proto.Marshal(&req)
 
 	if err != nil {
 		errorl.Log("msg", "unable to marshall PushRequest", "err", err)
