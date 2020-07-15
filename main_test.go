@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +16,11 @@ import (
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
+func logMsg(msg interface{}, t *testing.T) {
+	fmt.Println(msg)
+	t.Log(msg)
+}
+
 func TestKafkaConsumerCreationEmpty(t *testing.T) {
 	consumer, err := kafkaConsumer(&kafka.ConfigMap{})
 
@@ -21,7 +28,7 @@ func TestKafkaConsumerCreationEmpty(t *testing.T) {
 		t.Error("Should not be possible to create a consumer with empty parameters")
 	}
 
-	t.Logf("Could not create consumer with empty parameters: %v", err)
+	logMsg(fmt.Sprintf("Could not create consumer with empty parameters: %v", err), t)
 }
 
 func TestKafkaConsumerCreationSomeParameters(t *testing.T) {
@@ -33,7 +40,35 @@ func TestKafkaConsumerCreationSomeParameters(t *testing.T) {
 		t.Errorf("Should have been able to create a consumer: %v", err)
 	}
 
-	t.Logf("Consumer created: %v", consumer)
+	logMsg(fmt.Sprintf("Consumer created: %v", consumer), t)
+}
+
+func getFakeLog(rightnow time.Time) *types.FilebeatLog {
+	log := &types.FilebeatLog{}
+	log.Timestamp = rightnow
+	log.Metadata.Beat = "beat"
+	log.Metadata.Type = "type"
+	log.Metadata.Version = "1"
+	log.Metadata.Topic = "topic"
+	log.Offset = 0
+	log.Log.File.Path = "path"
+	log.JSON.Stream = "stream"
+	log.JSON.Time = rightnow.Format(time.RFC3339)
+	log.JSON.Log = "somelog"
+	log.Input.Type = "inputtype"
+	log.Beat.Hostname = "hostname"
+	log.Beat.Version = "1"
+	log.Beat.Name = "name"
+	log.Source = "source"
+	log.Kubernetes.Container.Name = "containername"
+	log.Kubernetes.Namespace = "namespace"
+	log.Kubernetes.Replicaset.Name = "replicaset"
+	log.Kubernetes.Labels.Name = "name"
+	log.Kubernetes.Labels.Namespace = "namespace"
+	log.Kubernetes.Labels.PodTemplateHash = "hash"
+	log.Kubernetes.Pod.UID = "12312211aa"
+	log.Kubernetes.Pod.Name = "pod"
+	return log
 }
 
 func TestLokiLogTransfer(t *testing.T) {
@@ -89,32 +124,41 @@ func TestLokiLogTransfer(t *testing.T) {
 
 	var col []*types.FilebeatLog
 
-	log := &types.FilebeatLog{}
-	log.Timestamp = rightnow
-	log.Metadata.Beat = "beat"
-	log.Metadata.Type = "type"
-	log.Metadata.Version = "1"
-	log.Metadata.Topic = "topic"
-	log.Offset = 0
-	log.Log.File.Path = "path"
-	log.JSON.Stream = "stream"
-	log.JSON.Time = rightnow.Format(time.RFC3339)
-	log.JSON.Log = "somelog"
-	log.Input.Type = "inputtype"
-	log.Beat.Hostname = "hostname"
-	log.Beat.Version = "1"
-	log.Beat.Name = "name"
-	log.Source = "source"
-	log.Kubernetes.Container.Name = "containername"
-	log.Kubernetes.Namespace = "namespace"
-	log.Kubernetes.Replicaset.Name = "replicaset"
-	log.Kubernetes.Labels.Name = "name"
-	log.Kubernetes.Labels.Namespace = "namespace"
-	log.Kubernetes.Labels.PodTemplateHash = "hash"
-	log.Kubernetes.Pod.UID = "12312211aa"
-	log.Kubernetes.Pod.Name = "pod"
+	log := getFakeLog(rightnow)
 
 	col = append(col, log)
 
 	sendToGrafana(col)
+}
+
+func TestLogHandlingFromChannel(t *testing.T) {
+	ch := make(chan []byte)
+	rightnow := time.Now()
+	duration := 5 * time.Second
+	internalBuffer = &duration
+
+	logMsg("starting handleLogMessage", t)
+	go handleLogMessage(ch)
+
+	logMsg("creating and sending fake log", t)
+	log := getFakeLog(rightnow)
+	logJSON, err := json.Marshal(log)
+
+	if err != nil {
+		t.Fatalf("Cannot marshall log to json: %v", err)
+		return
+	}
+
+	logMsg("sending logJSON", t)
+	ch <- logJSON
+
+	logMsg("testing `collection` length", t)
+	// collection now should have a log
+	if len(collection) != 1 {
+		t.Errorf("`collection` should have one log. len(collection)=%d", len(collection))
+		return
+	}
+
+	// let the buffer time pass
+	time.Sleep(5 * time.Second)
 }
