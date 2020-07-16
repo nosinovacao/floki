@@ -27,33 +27,45 @@ var (
 
 	lokiURL        string
 	internalBuffer *time.Duration
+	maxMessages int
 )
 
+func sortAndUpload() {
+    collectionLength := len(collection)
+    if collectionLength == 0 {
+        return
+    }
+    debug.Log("msg", "sorting and processing", "collectionLength", collectionLength)
+    copyOfCollection := make(logCollection, collectionLength)
+    copy(copyOfCollection, collection)
+    go sendToLoki(copyOfCollection)
+    collection = make(logCollection, 0, 1000)
+}
 
 func handleLogMessage(ch chan []byte) {
+    info.Log("msg", "starting handleLogMessage")
 	ticker := time.NewTicker(*internalBuffer)
 	defer ticker.Stop()
 	for {
 		select {
 		case data := <-ch:
+		    if len(data) < 2 {
+		        // a valid json needs at least two bytes: { and }
+		        continue
+            }
 			obj := &t.FilebeatLog{}
 			err := json.Unmarshal(data, obj)
 			if err != nil {
-				errorl.Log("msg", "unable to unmarshall json data", "err", err)
+				errorl.Log("msg", "unable to unmarshall json data", "err", err, "raw_data", string(data))
 			} else {
 				//debug.Log("ts", obj.Timestamp, "instance", obj.Host.Name, "ns", obj.Kubernetes.Namespace, "pod", obj.Kubernetes.Pod.Name, "msg", obj.JSON.Log)
 				collection = append(collection, obj)
 			}
+			if len(collection) > maxMessages {
+			    sortAndUpload()
+            }
 		case <-ticker.C:
-		    collectionLength := len(collection)
-			if collectionLength == 0 {
-				continue
-			}
-			debug.Log("msg", "sorting and processing", "collectionLength", collectionLength)
-			copyOfCollection := make(logCollection, collectionLength)
-			copy(copyOfCollection, collection)
-			go sendToLoki(copyOfCollection)
-			collection = make(logCollection, 0, 1000)
+		    sortAndUpload()
 		}
 	}
 }
@@ -67,22 +79,20 @@ func main() {
 		clientID       = flag.String("clientid", "", "the kafka client id")
 		groupID        = flag.String("groupid", "floki", "the kafka group id")
 		topicPatterns  = flag.String("topicPatterns", "^logging-*", "Regex pattern for kafka topic subscription")
+		kafkaVersion   = flag.String("kafkaVersion", "2.1.1", "kafka cluster's version")
+		maxBuffer      = flag.Uint("maxBuffer", 10000, "max messages before uploading")
 	)
 
 	flag.Parse()
 
 	lokiURL = *lokiAddr
 	internalBuffer = buffer
+	maxMessages = int(*maxBuffer)
 
 	sarama.Logger = saramaLogger{}
 
 	config := sarama.NewConfig()
 	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
-	config.Consumer.MaxWaitTime = time.Hour
-	config.Net.MaxOpenRequests = 100
-	config.Net.DialTimeout = 10
-	config.Net.ReadTimeout = 5 * time.Second
-	config.Net.WriteTimeout = config.Net.ReadTimeout
 
 	if *clientID != "" {
 	    config.ClientID = *clientID
@@ -94,6 +104,12 @@ func main() {
         } else {
             config.ClientID = "floki"
         }
+    }
+
+    if version, err := sarama.ParseKafkaVersion(*kafkaVersion); err == nil {
+        config.Version = version
+    } else {
+        config.Version = sarama.V2_1_0_0
     }
 
     consumer := Consumer{

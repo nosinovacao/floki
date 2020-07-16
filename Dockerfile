@@ -24,6 +24,6 @@ COPY . .
 RUN go mod download
 RUN GOOS=linux GOARCH=amd64 go build -a -tags static_all -o /go/bin/floki
 
-FROM scratch
-COPY --from=builder /go/bin/floki /go/bin/floki
+#FROM scratch
+#COPY --from=builder /go/bin/floki /go/bin/floki
 ENTRYPOINT ["/go/bin/floki"]

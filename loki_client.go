@@ -18,39 +18,7 @@ type logCollection []*t.FilebeatLog
 
 var collection = make(logCollection, 0, 1000)
 
-func sendToLoki(col logCollection) {
-    debug.Log("msg", "sendToLoki", "len", len(col))
-
-    body := map[string][]l.Entry{}
-
-    for _, filebeatLog := range col {
-        labels := fmt.Sprintf("{name=\"%s\", namespace=\"%s\", instance=\"%s\", replicaset=\"%s\"}",
-            filebeatLog.Kubernetes.Container.Name,
-            filebeatLog.Kubernetes.Namespace,
-            filebeatLog.Kubernetes.Node.Name,
-            filebeatLog.Kubernetes.Replicaset.Name)
-        entry := l.Entry{Timestamp: filebeatLog.Timestamp, Line: filebeatLog.JSON.Log}
-        if val, ok := body[labels]; ok {
-            body[labels] = append(val, entry)
-        } else {
-            body[labels] = []l.Entry{entry}
-        }
-    }
-
-    streams := make([]*l.Stream, 0, len(body))
-
-    for key, val := range body {
-        stream := &l.Stream{
-            Labels:  key,
-            Entries: val,
-        }
-        sort.SliceStable(stream.Entries, func(i, j int) bool {
-            return stream.Entries[i].Timestamp.Before(stream.Entries[j].Timestamp)
-        })
-        streams = append(streams, stream)
-    }
-
-    debug.Log("msg", fmt.Sprintf("sending %d streams to the server", len(streams)))
+func pushToLoki(streams []*l.Stream) {
     req := l.PushRequest{
         Streams: streams,
     }
@@ -98,4 +66,40 @@ func sendToLoki(col logCollection) {
         return
     }
     info.Log("msg", "sent streams to loki")
+}
+
+func sendToLoki(col logCollection) {
+    debug.Log("msg", "sendToLoki", "len", len(col))
+
+    body := map[string][]l.Entry{}
+
+    for _, filebeatLog := range col {
+        labels := fmt.Sprintf("{name=\"%s\", namespace=\"%s\", instance=\"%s\", replicaset=\"%s\"}",
+            filebeatLog.Kubernetes.Container.Name,
+            filebeatLog.Kubernetes.Namespace,
+            filebeatLog.Kubernetes.Node.Name,
+            filebeatLog.Kubernetes.Replicaset.Name)
+        entry := l.Entry{Timestamp: filebeatLog.Timestamp, Line: filebeatLog.JSON.Log}
+        if val, ok := body[labels]; ok {
+            body[labels] = append(val, entry)
+        } else {
+            body[labels] = []l.Entry{entry}
+        }
+    }
+
+    streams := make([]*l.Stream, 0, len(body))
+
+    for key, val := range body {
+        stream := &l.Stream{
+            Labels:  key,
+            Entries: val,
+        }
+        sort.SliceStable(stream.Entries, func(i, j int) bool {
+            return stream.Entries[i].Timestamp.Before(stream.Entries[j].Timestamp)
+        })
+        streams = append(streams, stream)
+    }
+
+    debug.Log("msg", fmt.Sprintf("sending %d streams to the server", len(streams)))
+    pushToLoki(streams)
 }

@@ -11,7 +11,6 @@ type Consumer struct {
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
     for message := range claim.Messages() {
-        debug.Log("topic", message.Topic, "key", message.Key, "log_ts", message.BlockTimestamp)
         consumer.messageChan <- message.Value
     }
 
