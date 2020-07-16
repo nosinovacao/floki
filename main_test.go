@@ -13,7 +13,6 @@ import (
 	types "github.com/nosinovacao/floki/types"
 
 	"github.com/golang/snappy"
-	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
 func logMsg(msg interface{}, t *testing.T) {
@@ -21,27 +20,6 @@ func logMsg(msg interface{}, t *testing.T) {
 	t.Log(msg)
 }
 
-func TestKafkaConsumerCreationEmpty(t *testing.T) {
-	consumer, err := kafkaConsumer(&kafka.ConfigMap{})
-
-	if consumer != nil || err == nil {
-		t.Error("Should not be possible to create a consumer with empty parameters")
-	}
-
-	logMsg(fmt.Sprintf("Could not create consumer with empty parameters: %v", err), t)
-}
-
-func TestKafkaConsumerCreationSomeParameters(t *testing.T) {
-	consumer, err := kafkaConsumer(&kafka.ConfigMap{
-		"group.id": "someid",
-	})
-
-	if err != nil {
-		t.Errorf("Should have been able to create a consumer: %v", err)
-	}
-
-	logMsg(fmt.Sprintf("Consumer created: %v", consumer), t)
-}
 
 func getFakeLog(rightnow time.Time) *types.FilebeatLog {
 	log := &types.FilebeatLog{}
@@ -128,7 +106,7 @@ func TestLokiLogTransfer(t *testing.T) {
 
 	col = append(col, log)
 
-	sendToGrafana(col)
+	sendToLoki(col)
 }
 
 func TestLogHandlingFromChannel(t *testing.T) {

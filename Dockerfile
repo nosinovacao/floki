@@ -1,11 +1,23 @@
 FROM golang:alpine AS builder
 ENV GO111MODULE=on
-RUN apk add --update --no-cache git librdkafka-dev pkgconf bash make g++ zlib-dev libssl1.1 libsasl zstd-libs && \
-    git clone https://github.com/edenhill/librdkafka.git && \
-    cd librdkafka && \
-    ./configure --prefix /usr && \
-    make -j8 && \
-    make install
+# make g++ zlib-dev libssl1.1 libsasl zstd-libsapk add --no-cache  \
+RUN apk add --update --no-cache \
+                     bash              \
+                     build-base        \
+                     coreutils         \
+                     gcc               \
+                     git               \
+                     g++               \
+                     make              \
+                     musl-dev          \
+                     openssl-dev       \
+                     openssl           \
+                     libsasl           \
+                     libgss-dev        \
+                     rpm               \
+                     lz4-dev           \
+                     zlib-dev          \
+                     ca-certificates
 
 WORKDIR $GOPATH/src/floki/build/
 COPY . .
